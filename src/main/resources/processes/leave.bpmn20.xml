@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:flowable="http://flowable.org/bpmn"
+             xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.flowable.org/processdef" exporter="Flowable Open Source Modeler"
+             exporterVersion="6.7.2">
+    <process id="ask_for_leave" name="ask_for_leave" isExecutable="true">
+        <startEvent id="startLeave" name="开始"/>
+        <sequenceFlow id="flowStart" sourceRef="startLeave" targetRef="leaveTask"/>
+        <userTask id="leaveTask" name="请假" flowable:assignee="#{leaveTask}"/>
+        <sequenceFlow id="modeFlow" sourceRef="leaveTask" targetRef="zuzhangTask"/>
+        <userTask id="zuzhangTask" name="组长审核" flowable:assignee="#{zuzhangTask}"/>
+        <sequenceFlow id="zuzhangTask_zuzhangJudeTask" sourceRef="zuzhangTask" targetRef="zuzhangJudeTask"/>
+        <exclusiveGateway id="zuzhangJudeTask"/>
+        <sequenceFlow id="zuzhang_go" sourceRef="zuzhangJudeTask" targetRef="managerTask" name="通过">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult=='通过'}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="zuzhang_reject" sourceRef="zuzhangJudeTask" targetRef="sendMail" name="拒绝">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult=='拒绝'}]]></conditionExpression>
+        </sequenceFlow>
+        <userTask id="managerTask" name="经理审核" flowable:assignee="#{managerTask}"/>
+        <exclusiveGateway id="managerJudgeTask"/>
+        <sequenceFlow id="jugdeFlow" sourceRef="managerTask" targetRef="managerJudgeTask"/>
+        <sequenceFlow id="flowEnd" name="通过" sourceRef="managerJudgeTask" targetRef="endLeave">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult=='通过'}]]></conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="rejectFlow" name="拒绝" sourceRef="managerJudgeTask" targetRef="sendMail">
+            <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult=='拒绝'}]]></conditionExpression>
+        </sequenceFlow>
+        <serviceTask id="sendMail" flowable:exclusive="true" name="发送失败提示" isForCompensation="true"
+                     flowable:class="com.tc.learnflowable.handler.AskForLeaveFail"/>
+        <sequenceFlow id="endFlow" sourceRef="sendMail" targetRef="askForLeaveFail"/>
+        <endEvent id="askForLeaveFail" name="请假失败"/>
+        <endEvent id="endLeave" name="结束"/>
+    </process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_leave">
+        <bpmndi:BPMNPlane bpmnElement="ask_for_leave" id="BPMNPlane_leave">
+            <bpmndi:BPMNShape bpmnElement="startLeave" id="BPMNShape_startLeave">
+                <omgdc:Bounds height="30.0" width="30.0" x="45.0" y="255.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="leaveTask" id="BPMNShape_leaveTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="230.0" y="240.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="zuzhangTask" id="BPMNShape_zuzhangTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="230.0" y="70.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="zuzhangJudeTask" id="BPMNShape_zuzhangJudeTask">
+                <omgdc:Bounds height="40.0" width="40.0" x="380.0" y="80.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="managerTask" id="BPMNShape_managerTask">
+                <omgdc:Bounds height="60.0" width="100.0" x="480.0" y="15.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="managerJudgeTask" id="BPMNShape_managerJudgeTask">
+                <omgdc:Bounds height="40.0" width="40.0" x="620.0" y="25.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="sendMail" id="BPMNShape_sendMail">
+                <omgdc:Bounds height="60.0" width="100.0" x="590.0" y="375.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="askForLeaveFail" id="BPMNShape_askForLeaveFail">
+                <omgdc:Bounds height="28.0" width="28.0" x="930.0" y="391.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endLeave" id="BPMNShape_endLeave">
+                <omgdc:Bounds height="28.0" width="28.0" x="825.0" y="31.0"></omgdc:Bounds>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="zuzhang_go" id="BPMNEdge_zuzhang_go" flowable:sourceDockerX="20.0"
+                             flowable:sourceDockerY="20.0" flowable:targetDockerX="50.0" flowable:targetDockerY="30.0">
+                <omgdi:waypoint x="419.91892523364106" y="100.0"></omgdi:waypoint>
+                <omgdi:waypoint x="432.0" y="100.0"></omgdi:waypoint>
+                <omgdi:waypoint x="432.0" y="45.0"></omgdi:waypoint>
+                <omgdi:waypoint x="480.0" y="45.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="endFlow" id="BPMNEdge_endFlow" flowable:sourceDockerX="50.0"
+                             flowable:sourceDockerY="30.0" flowable:targetDockerX="14.0" flowable:targetDockerY="14.0">
+                <omgdi:waypoint x="689.9499999999999" y="405.0"></omgdi:waypoint>
+                <omgdi:waypoint x="930.0" y="405.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="zuzhangTask_zuzhangJudeTask" id="BPMNEdge_zuzhangTask_zuzhangJudeTask"
+                             flowable:sourceDockerX="50.0" flowable:sourceDockerY="30.0" flowable:targetDockerX="20.0"
+                             flowable:targetDockerY="20.0">
+                <omgdi:waypoint x="329.95000000000005" y="100.0"></omgdi:waypoint>
+                <omgdi:waypoint x="380.0" y="100.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="rejectFlow" id="BPMNEdge_rejectFlow" flowable:sourceDockerX="20.0"
+                             flowable:sourceDockerY="20.0" flowable:targetDockerX="50.0" flowable:targetDockerY="30.0">
+                <omgdi:waypoint x="640.0" y="64.94722993612885"></omgdi:waypoint>
+                <omgdi:waypoint x="640.0" y="375.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flowEnd" id="BPMNEdge_flowEnd" flowable:sourceDockerX="20.0"
+                             flowable:sourceDockerY="20.0" flowable:targetDockerX="14.0" flowable:targetDockerY="14.0">
+                <omgdi:waypoint x="659.9449899547882" y="45.0"></omgdi:waypoint>
+                <omgdi:waypoint x="825.0" y="45.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="modeFlow" id="BPMNEdge_modeFlow" flowable:sourceDockerX="50.0"
+                             flowable:sourceDockerY="30.0" flowable:targetDockerX="50.0" flowable:targetDockerY="30.0">
+                <omgdi:waypoint x="280.0" y="240.0"></omgdi:waypoint>
+                <omgdi:waypoint x="280.0" y="129.95"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="flowStart" id="BPMNEdge_flowStart" flowable:sourceDockerX="15.0"
+                             flowable:sourceDockerY="15.0" flowable:targetDockerX="50.0" flowable:targetDockerY="30.0">
+                <omgdi:waypoint x="74.94999962231432" y="270.0"></omgdi:waypoint>
+                <omgdi:waypoint x="230.0" y="270.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="jugdeFlow" id="BPMNEdge_jugdeFlow" flowable:sourceDockerX="50.0"
+                             flowable:sourceDockerY="30.0" flowable:targetDockerX="20.0" flowable:targetDockerY="20.0">
+                <omgdi:waypoint x="579.95" y="45.0"></omgdi:waypoint>
+                <omgdi:waypoint x="620.0" y="45.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="zuzhang_reject" id="BPMNEdge_zuzhang_reject" flowable:sourceDockerX="20.0"
+                             flowable:sourceDockerY="20.0" flowable:targetDockerX="50.0" flowable:targetDockerY="30.0">
+                <omgdi:waypoint x="419.91892523364106" y="100.0"></omgdi:waypoint>
+                <omgdi:waypoint x="432.0" y="100.0"></omgdi:waypoint>
+                <omgdi:waypoint x="432.0" y="405.0"></omgdi:waypoint>
+                <omgdi:waypoint x="590.0" y="405.0"></omgdi:waypoint>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</definitions>
